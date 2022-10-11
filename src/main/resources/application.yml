@@ -1,0 +1,51 @@
+server:
+  port: 9019
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 500MB
+  profiles:
+    include: local
+  application:
+    name: board-service
+
+  jpa:
+    generate-ddl: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        show_sql: false
+    show_sql: false
+    hibernate:
+      ddl-auto: update
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+springdoc:
+  api-docs:
+    path: /api-docs/json
+    groups:
+      enabled: true
+  default-produces-media-type: application/json;charset=UTF-8
+  default-consumes-media-type: application/json;charset=UTF-8
+  version: v1.0.0
+  swagger-ui:
+    operations-sorter: alpha
+    tags-sorter: alpha
+    path: /bus/v3/api-docs
+  cache:
+    disabled: true
+  packages-to-scan: com.nanum
+
+cloud:
+  aws:
+    credentials:
+      accessKey: AKIA4CDIXXFFKCY4FC7K
+      secretKey: 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
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: 'false'
