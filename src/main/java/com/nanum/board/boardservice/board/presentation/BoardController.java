@@ -2,11 +2,9 @@ package com.nanum.board.boardservice.board.presentation;
 
 import com.nanum.board.boardservice.board.application.BoardService;
 import com.nanum.board.boardservice.board.dto.BoardDto;
-import com.nanum.board.boardservice.board.infrastructure.BoardRepository;
-import com.nanum.board.boardservice.board.vo.BoardRequest;
-import com.nanum.board.boardservice.board.vo.BoardListResponse;
-import com.nanum.board.boardservice.board.vo.BoardResponse;
-import com.nanum.board.boardservice.board.vo.BoardUpdateRequest;
+import com.nanum.board.boardservice.board.security.jwt.JwtTokenProvider;
+import com.nanum.board.boardservice.board.vo.*;
+import com.nanum.board.boardservice.client.UserServiceClient;
 import com.nanum.board.config.BaseResponse;
 import com.nanum.board.exception.ExceptionResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -49,11 +48,13 @@ import java.util.List;
 })
 public class BoardController {
     private final BoardService boardService;
-    private final BoardRepository boardRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserServiceClient userServiceClient;
 
-    @Operation(summary = "사용자 회원가입 API", description = "사용자가 회원가입을 하기 위한 요청")
-    @PostMapping("/posts")
-    public ResponseEntity<Object> writePost(@Valid @RequestPart BoardRequest boardRequest,
+    @Operation(summary = "게시글 작성 API", description = "사용자가 게시글을 작성하기 위한 api")
+    @PostMapping("/posts/{userId}")
+    public ResponseEntity<Object> writePost(@Valid @PathVariable Long userId,
+                                            @RequestPart BoardRequest boardRequest,
                                             @RequestPart(value = "boardImages", required = false) List<MultipartFile> multipartFiles) {
 
         ModelMapper mapper = new ModelMapper();
@@ -67,10 +68,10 @@ public class BoardController {
         if (multipartFiles != null && !multipartFiles.isEmpty()) {
             log.info(multipartFiles.toString());
             log.info("******");
-            boardService.writePost(boardDto, multipartFiles);
+            boardService.writePost(userId, boardDto, multipartFiles);
         } else {
             log.info("-------");
-            boardService.writePost(boardDto, null);
+            boardService.writePost(userId, boardDto, null);
         }
 
 
@@ -88,7 +89,21 @@ public class BoardController {
     @Operation(summary = "게시글 상세조회 api", description = "게시글 Id에 따라 상세조회하는 api")
     @GetMapping("/posts/{postId}")
     public ResponseEntity<BaseResponse<BoardResponse>> retrievePost(@PathVariable Long postId) {
-        BoardResponse boardResponse = boardService.retrievePost(postId);
+
+        String token = jwtTokenProvider.customResolveToken();
+        BoardResponse boardResponse = null;
+        String userPk;
+        if (token == null) {
+            Long userId = -1L;
+            boardResponse = boardService.retrievePost(postId, userId);
+        } else {
+            userPk = jwtTokenProvider.getUserPk(token);
+            UsersResponse users = userServiceClient.getUsersByEmail(userPk);
+            Long id = users.getUserId();
+
+            boardResponse = boardService.retrievePost(postId, id);
+        }
+
         BaseResponse<BoardResponse> baseResponse = new BaseResponse<>(boardResponse);
         return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
     }
@@ -105,9 +120,9 @@ public class BoardController {
         BaseResponse<String> baseResponse = new BaseResponse<>(result);
         BaseResponse<String> failResponse = new BaseResponse<>(failResult);
 
-        if (!board){
+        if (!board) {
             return ResponseEntity.status(HttpStatus.OK).body(failResponse);
-        }else
+        } else
             return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
     }
 }

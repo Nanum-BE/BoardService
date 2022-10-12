@@ -2,6 +2,8 @@ package com.nanum.board.boardservice.board.presentation;
 
 import com.nanum.board.boardservice.board.application.BoardService;
 import com.nanum.board.boardservice.board.vo.BoardCategoryRequest;
+import com.nanum.board.boardservice.board.vo.BoardCategoryResponse;
+import com.nanum.board.boardservice.board.vo.CategoryUpdateRequest;
 import com.nanum.board.config.BaseResponse;
 import com.nanum.board.exception.ExceptionResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -55,6 +58,26 @@ public class BoardCategoryController {
         if (categories) {
             return ResponseEntity.status(HttpStatus.CREATED).body(baseResponse);
         }
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(failResult);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(failResponse);
+    }
+
+    @Operation(summary = "게시판 카테고리 목록 조회 api", description = "게시판의 전체 카테고리 조회")
+    @GetMapping("/categories")
+    public ResponseEntity<BaseResponse<List<BoardCategoryResponse>>> retrieveCategories() {
+        List<BoardCategoryResponse> categories = boardService.retrieveCategories();
+
+        BaseResponse<List<BoardCategoryResponse>> baseResponse = new BaseResponse<>(categories);
+        return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
+    }
+
+    @Operation(summary = "게시판 카테고리 수정 api", description = "게시판의 특정 카테고리 수정")
+    @PutMapping("/categories")
+    public ResponseEntity<Object> updateCategories(@RequestBody CategoryUpdateRequest categoryUpdateRequest){
+        boardService.updateCategories(categoryUpdateRequest);
+
+        String result = "카테고리 수정이 완료되었습니다";
+        BaseResponse<String> baseResponse = new BaseResponse<>(result);
+
+        return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
     }
 }

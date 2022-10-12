@@ -9,6 +9,6 @@ import javax.validation.constraints.NotNull;
 public class BoardCategoryRequest {
 
     @NotNull(message = "name could not be null")
-    @Schema(description = "게시판 카테고리 이름")
+    @Schema(description = "게시판 카테고리 이름", defaultValue = "자유게시판")
     private String name;
 }

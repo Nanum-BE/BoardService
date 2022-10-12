@@ -1,4 +1,34 @@
 package com.nanum.board.boardservice.board.domain;
 
-public class NestedReply {
+import com.nanum.board.config.BaseTimeEntity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
+
+import javax.persistence.*;
+
+@Entity
+@Builder
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+public class NestedReply extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    @Comment("대댓글 내용")
+    private String content;
+
+    @Column(nullable = false)
+    @Comment("대댓글 작성자 id")
+    private Long userId;
+
+
+    @ManyToOne
+    Reply reply;
 }

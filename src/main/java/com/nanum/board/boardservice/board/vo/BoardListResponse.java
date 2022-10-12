@@ -22,6 +22,8 @@ public class BoardListResponse {
     @Schema(description = "게시글 제목")
     private String title;
 
+    private String nickName;
+
     @Schema(description = "게시글 조회 수", defaultValue = "0")
     private Long viewCount;
 
