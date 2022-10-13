@@ -6,27 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class BoardResponse {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class NestReplyUpdateRequest {
 
-    private Long id;
-
-    private Long userId;
-
-    private String title;
+    private Long nestId;
 
     private String content;
-
-    private String nickName;
-
-    private Long recommendId;
-
-    List<BoardImgResponse> imgUrls;
-
-
 }

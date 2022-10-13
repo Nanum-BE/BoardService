@@ -1,10 +1,7 @@
 package com.nanum.board.boardservice.board.presentation;
 
 import com.nanum.board.boardservice.board.application.BoardService;
-import com.nanum.board.boardservice.board.vo.NestReplyRequest;
-import com.nanum.board.boardservice.board.vo.ReplyRequest;
-import com.nanum.board.boardservice.board.vo.ReplyResponse;
-import com.nanum.board.boardservice.board.vo.ReplyUpdateRequest;
+import com.nanum.board.boardservice.board.vo.*;
 import com.nanum.board.config.BaseResponse;
 import com.nanum.board.exception.ExceptionResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,6 +74,16 @@ public class ReplyController {
         return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
     }
 
+    @Operation(summary = "게시글 댓글 삭제", description = "게시글의 특정 댓글 삭제")
+    @DeleteMapping("/board/reply/{replyId}")
+    public ResponseEntity<Object> deleteReply(@PathVariable Long replyId) {
+        boardService.deleteReply(replyId);
+        String result = "댓글 삭제가 완료되었습니다";
+
+        BaseResponse<String> response = new BaseResponse<>(result);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @Operation(summary = "게시글 대댓글 생성", description = "특정 댓글에 대한 대댓글 생성")
     @PostMapping("/board/reply/nest")
     public ResponseEntity<Object> createNestReply(@RequestBody NestReplyRequest nestReplyRequest) {
@@ -93,5 +100,26 @@ public class ReplyController {
         List<ReplyResponse> responses = boardService.retrieveNestReply(replyId);
         BaseResponse<List<ReplyResponse>> baseResponse = new BaseResponse<>(responses);
         return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
+    }
+
+    @Operation(summary = "게시글 대댓글 수정", description = "특정 댓글에 대한 대댓글 수정")
+    @PutMapping("/board/reply/nest")
+    public ResponseEntity<Object> updateNestReply(@RequestBody NestReplyUpdateRequest nestReplyUpdateRequest) {
+        boardService.updateNestReply(nestReplyUpdateRequest);
+
+        String result = "대댓글 수정이 완료되었습니다";
+        BaseResponse<String> response = new BaseResponse<>(result);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "게시글 대댓글 삭제", description = "특정 댓글에 대한 대댓글 삭제")
+    @DeleteMapping("/board/reply/nest/{nestId}")
+    public ResponseEntity<Object> deleteNestReply(@PathVariable Long nestId) {
+        boardService.deleteNestReply(nestId);
+
+        String result = "대댓글 삭제가 완료되었습니다";
+        BaseResponse<String> response = new BaseResponse<>(result);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

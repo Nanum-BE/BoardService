@@ -2,7 +2,6 @@ package com.nanum.board.boardservice.board.application;
 
 import com.nanum.board.boardservice.board.dto.BoardDto;
 import com.nanum.board.boardservice.board.vo.*;
-import org.apache.kafka.common.protocol.types.Field;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -22,6 +21,10 @@ public interface BoardService {
 
     Long likePosts(Long postId);
 
+    void deletePosts(Long postId);
+
+    void deleteReply(Long replyId);
+
     boolean createNestReply(NestReplyRequest nestReplyRequest);
 
     void deleteLike(Long recommendId);
@@ -33,6 +36,10 @@ public interface BoardService {
     List<ReplyResponse> retrieveReply(Long boardId);
 
     List<ReplyResponse> retrieveNestReply(Long replyId);
+
+    void updateNestReply(NestReplyUpdateRequest nestReplyUpdateRequest);
+
+    void deleteNestReply(Long nestId);
 
     boolean updatePosts(BoardUpdateRequest boardUpdateRequest, List<MultipartFile> multipartFiles);
 }

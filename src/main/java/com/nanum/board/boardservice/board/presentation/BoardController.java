@@ -22,7 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -91,8 +90,9 @@ public class BoardController {
     public ResponseEntity<BaseResponse<BoardResponse>> retrievePost(@PathVariable Long postId) {
 
         String token = jwtTokenProvider.customResolveToken();
-        BoardResponse boardResponse = null;
+        BoardResponse boardResponse;
         String userPk;
+
         if (token == null) {
             Long userId = -1L;
             boardResponse = boardService.retrievePost(postId, userId);
@@ -124,5 +124,16 @@ public class BoardController {
             return ResponseEntity.status(HttpStatus.OK).body(failResponse);
         } else
             return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
+    }
+
+    @Operation(summary = "게시글 삭제", description = "게시글을 삭제하는 api, 삭제하면 글 목록에서도 보이지 않도록")
+    @DeleteMapping("/posts/{postId}")
+    public ResponseEntity<Object> deletePosts(@PathVariable Long postId) {
+        boardService.deletePosts(postId);
+
+        String result = "게시글 삭제 완료";
+        BaseResponse<String> response = new BaseResponse<>(result);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

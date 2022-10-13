@@ -2,9 +2,11 @@ package com.nanum.board.boardservice.board.application;
 
 import com.nanum.board.boardservice.board.domain.*;
 import com.nanum.board.boardservice.board.dto.BoardDto;
+import com.nanum.board.boardservice.board.dto.UserDto;
 import com.nanum.board.boardservice.board.infrastructure.*;
 import com.nanum.board.boardservice.board.vo.*;
 import com.nanum.board.boardservice.client.UserServiceClient;
+import com.nanum.board.boardservice.client.vo.FeignResponse;
 import com.nanum.board.config.BaseResponse;
 import com.nanum.board.utils.s3.S3UploaderService;
 import com.nanum.board.utils.s3.dto.S3UploadDto;
@@ -72,7 +74,7 @@ public class BoardServiceImpl implements BoardService {
         Long likeId;
 
         Board board = boardRepository.findById(postId).orElseThrow();
-        UserResponse users = userServiceClient.getUsers(board.getUserId());
+        FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
 
@@ -102,21 +104,23 @@ public class BoardServiceImpl implements BoardService {
                 return BoardResponse.builder()
                         .id(board.getId())
                         .title(board.getTitle())
-                        .nickName(users.getResult().getNickname())
+                        .userId(board.getUserId())
+                        .nickName(user.getResult().getNickName())
                         .content(board.getContent())
                         .recommendId(likeId)
                         .imgUrls(boardImgResponses)
                         .build();
             } else
                 likeId = null;
-                return BoardResponse.builder()
-                        .id(board.getId())
-                        .title(board.getTitle())
-                        .nickName(users.getResult().getNickname())
-                        .content(board.getContent())
-                        .recommendId(likeId)
-                        .imgUrls(boardImgResponses)
-                        .build();
+            return BoardResponse.builder()
+                    .id(board.getId())
+                    .title(board.getTitle())
+                    .userId(board.getUserId())
+                    .nickName(user.getResult().getNickName())
+                    .content(board.getContent())
+                    .recommendId(likeId)
+                    .imgUrls(boardImgResponses)
+                    .build();
         } else
             log.info("******");
 
@@ -124,7 +128,8 @@ public class BoardServiceImpl implements BoardService {
         return BoardResponse.builder()
                 .id(board.getId())
                 .title(board.getTitle())
-                .nickName(users.getResult().getNickname())
+                .nickName(user.getResult().getNickName())
+                .userId(board.getUserId())
                 .content(board.getContent())
                 .recommendId(likeId)
                 .imgUrls(boardImgResponses)
@@ -173,6 +178,12 @@ public class BoardServiceImpl implements BoardService {
         return true;
     }
 
+    //게시글 삭제
+    @Override
+    public void deletePosts(Long postId) {
+        boardRepository.deleteById(postId);
+    }
+
     //게시글 좋아요 생성
     @Override
     public Long likePosts(Long postId) {
@@ -209,8 +220,8 @@ public class BoardServiceImpl implements BoardService {
 
         return true;
     }
-    
-    //카테고리 별 게시글 목록 조회
+
+    //카테고리별 게시글 목록 조회
     @Override
     public List<BoardListResponse> retrievePosts(Long categoryId) {
         List<Board> boards = boardRepository.findAllByBoardCategoryId(categoryId);
@@ -286,19 +297,31 @@ public class BoardServiceImpl implements BoardService {
         List<Reply> replies = replyRepository.findAllByBoardId(boardId);
 
         replies.forEach(reply -> {
-            UserResponse users = userServiceClient.getUsers(reply.getUserId());
-
+            FeignResponse<UserDto> users = userServiceClient.getUser(reply.getUserId());
             Long countNestReply = nestReplyRepository.countAllByReplyId(reply.getId());
 
-            replyResponses.add(ReplyResponse.builder()
-                    .content(reply.getContent())
-                    .nestedCount(countNestReply)
-                    .replyId(reply.getId())
-                    .imgUrl(users.getResult().getProfileImgUrl())
-                    .createAt(reply.getCreateAt())
-                    .nickName(users.getResult().getNickname())
-                    .build());
+            if (reply.getDeleteAt() != null) {
+                replyResponses.add(ReplyResponse.builder()
+                        .content("삭제된 댓글입니다")
+                        .nestedCount(countNestReply)
+                        .replyId(reply.getId())
+                        .userId(reply.getUserId())
+                        .imgUrl(null)
+                        .createAt(reply.getCreateAt())
+                        .nickName(null)
+                        .build());
+            } else
+                replyResponses.add(ReplyResponse.builder()
+                        .content(reply.getContent())
+                        .nestedCount(countNestReply)
+                        .replyId(reply.getId())
+                        .userId(reply.getUserId())
+                        .imgUrl(users.getResult().getProfileImgUrl())
+                        .createAt(reply.getCreateAt())
+                        .nickName(users.getResult().getNickName())
+                        .build());
         });
+
         return replyResponses;
     }
 
@@ -312,6 +335,12 @@ public class BoardServiceImpl implements BoardService {
                 .content(replyUpdateRequest.getContent())
                 .board(reply.getBoard())
                 .build());
+    }
+
+    //게시글 댓글 삭제
+    @Override
+    public void deleteReply(Long replyId) {
+        replyRepository.deleteById(replyId);
     }
 
     //특정 댓글에 대한 대댓글 생성
@@ -335,15 +364,45 @@ public class BoardServiceImpl implements BoardService {
         List<NestedReply> nestedReplies = nestReplyRepository.findAllByReplyId(replyId);
 
         nestedReplies.forEach(nestedReply -> {
-            UserResponse users = userServiceClient.getUsers(nestedReply.getUserId());
-            replyResponses.add(ReplyResponse.builder()
-                    .content(nestedReply.getContent())
-                    .nickName(users.getResult().getNickname())
-                    .imgUrl(users.getResult().getProfileImgUrl())
-                    .createAt(nestedReply.getCreateAt())
-                    .replyId(nestedReply.getReply().getId())
-                    .build());
+            FeignResponse<UserDto> users = userServiceClient.getUser(nestedReply.getUserId());
+
+            if (nestedReply.getDeleteAt() != null) {
+                replyResponses.add(ReplyResponse.builder()
+                        .content("삭제된 댓글입니다")
+                        .nickName(null)
+                        .userId(nestedReply.getUserId())
+                        .imgUrl(null)
+                        .createAt(nestedReply.getCreateAt())
+                        .replyId(nestedReply.getReply().getId())
+                        .build());
+            } else
+                replyResponses.add(ReplyResponse.builder()
+                        .content(nestedReply.getContent())
+                        .nickName(users.getResult().getNickName())
+                        .userId(nestedReply.getUserId())
+                        .imgUrl(users.getResult().getProfileImgUrl())
+                        .createAt(nestedReply.getCreateAt())
+                        .replyId(nestedReply.getReply().getId())
+                        .build());
         });
         return replyResponses;
+    }
+
+    //특정 댓글에 대한 대댓글 수정
+    @Override
+    public void updateNestReply(NestReplyUpdateRequest nestReplyUpdateRequest) {
+        NestedReply nestedReply = nestReplyRepository.findById(nestReplyUpdateRequest.getNestId()).get();
+        nestReplyRepository.save(NestedReply.builder()
+                .reply(nestedReply.getReply())
+                .content(nestReplyUpdateRequest.getContent())
+                .userId(nestedReply.getUserId())
+                .id(nestedReply.getId())
+                .build());
+    }
+
+    //특정 댓글에 대한 대댓글 삭제
+    @Override
+    public void deleteNestReply(Long nestId) {
+        nestReplyRepository.deleteById(nestId);
     }
 }

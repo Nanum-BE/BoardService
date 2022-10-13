@@ -20,6 +20,8 @@ public class ReplyResponse {
     @Schema(description = "댓글을 작성한 사용자 별명")
     private String nickName;
 
+    private Long userId;
+
     @Schema(description = "댓글을 작성한 사용자 프로필 이미지")
     private String imgUrl;
 

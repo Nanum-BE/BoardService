@@ -19,7 +19,7 @@ public class UserDto {
     private Long userId;
     private String email;
     private String pwd;
-    private String nickname;
+    private String nickName;
     private Role role;
     private String phone;
     private String profileImgUrl;
