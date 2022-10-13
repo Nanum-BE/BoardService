@@ -66,35 +66,6 @@ public class BoardServiceImpl implements BoardService {
         return true;
     }
 
-    //카테고리 생성
-    @Override
-    public boolean createCategories(BoardCategoryRequest boardCategoryRequest) {
-        boardCategoryRepository.save(BoardCategory.builder()
-                .name(boardCategoryRequest.getName())
-                .build());
-
-        return true;
-    }
-
-    @Override
-    public List<BoardListResponse> retrievePosts(Long categoryId) {
-        List<Board> boards = boardRepository.findAllByBoardCategoryId(categoryId);
-
-        List<BoardListResponse> boardListRespons = new ArrayList<>();
-
-        boards.forEach(board -> {
-            boardListRespons.add(BoardListResponse.builder()
-                    .id(board.getId())
-                    .title(board.getTitle())
-                    .categoryId(board.getBoardCategory().getId())
-                    .createAt(board.getCreateAt())
-                    .viewCount(board.getViewCount())
-                    .build());
-        });
-
-        return boardListRespons;
-    }
-
     //상세 게시글 조회
     @Override
     public BoardResponse retrievePost(Long postId, Long id) {
@@ -137,24 +108,126 @@ public class BoardServiceImpl implements BoardService {
                         .imgUrls(boardImgResponses)
                         .build();
             } else
+                likeId = null;
                 return BoardResponse.builder()
                         .id(board.getId())
                         .title(board.getTitle())
                         .nickName(users.getResult().getNickname())
                         .content(board.getContent())
-                        .recommendId(null)
+                        .recommendId(likeId)
                         .imgUrls(boardImgResponses)
                         .build();
         } else
             log.info("******");
-            return BoardResponse.builder()
+
+        likeId = null;
+        return BoardResponse.builder()
+                .id(board.getId())
+                .title(board.getTitle())
+                .nickName(users.getResult().getNickname())
+                .content(board.getContent())
+                .recommendId(likeId)
+                .imgUrls(boardImgResponses)
+                .build();
+    }
+
+    //게시글 수정
+    @Override
+    public boolean updatePosts(BoardUpdateRequest boardUpdateRequest, List<MultipartFile> multipartFiles) {
+        Board board = boardRepository.findById(boardUpdateRequest.getBoardId()).get();
+
+        List<Long> imgId = boardUpdateRequest.getImgId();
+
+        imgId.forEach(boardImgRepository::deleteById);
+
+        boardRepository.save(Board.builder()
+                .id(board.getId())
+                .viewCount(board.getViewCount())
+                .userId(board.getUserId())
+                .boardCategory(boardCategoryRepository.findById(boardUpdateRequest.getCategoryId()).get())
+                .content(boardUpdateRequest.getContent())
+                .title(boardUpdateRequest.getTitle())
+                .build());
+
+        BoardImage boardImages;
+
+        S3UploadDto s3UploadDto;
+        if (multipartFiles != null && !multipartFiles.isEmpty()) {
+            for (MultipartFile multipartFile : multipartFiles) {
+                try {
+                    s3UploadDto = s3UploaderService.uploadBoards(multipartFile, "myspharosbucket", "boardImg");
+
+                    boardImages = BoardImage.builder()
+                            .board(board)
+                            .boardImgPath(s3UploadDto.getImgUrl())
+                            .originName(s3UploadDto.getOriginName())
+                            .saveName(s3UploadDto.getSaveName())
+                            .build();
+
+                    boardImgRepository.save(boardImages);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return true;
+    }
+
+    //게시글 좋아요 생성
+    @Override
+    public Long likePosts(Long postId) {
+        Board board = boardRepository.findById(postId).get();
+
+        Recommend recommend;
+        Long id;
+
+        if (likeRepository.findByBoardIdAndUserId(board.getId(), board.getUserId()) == null) {
+            recommend = likeRepository.save(Recommend.builder()
+                    .board(board)
+                    .userId(board.getUserId())
+                    .build());
+            return recommend.getId();
+        } else {
+            id = likeRepository.findByBoardIdAndUserId(board.getId(), board.getUserId());
+        }
+
+        return id;
+    }
+
+    //게시글 좋아요 취소
+    @Override
+    public void deleteLike(Long recommendId) {
+        likeRepository.deleteById(recommendId);
+    }
+
+    //카테고리 생성
+    @Override
+    public boolean createCategories(BoardCategoryRequest boardCategoryRequest) {
+        boardCategoryRepository.save(BoardCategory.builder()
+                .name(boardCategoryRequest.getName())
+                .build());
+
+        return true;
+    }
+    
+    //카테고리 별 게시글 목록 조회
+    @Override
+    public List<BoardListResponse> retrievePosts(Long categoryId) {
+        List<Board> boards = boardRepository.findAllByBoardCategoryId(categoryId);
+
+        List<BoardListResponse> boardListRespons = new ArrayList<>();
+
+        boards.forEach(board -> {
+            boardListRespons.add(BoardListResponse.builder()
                     .id(board.getId())
                     .title(board.getTitle())
-                    .nickName(users.getResult().getNickname())
-                    .content(board.getContent())
-                    .recommendId(null)
-                    .imgUrls(boardImgResponses)
-                    .build();
+                    .categoryId(board.getBoardCategory().getId())
+                    .createAt(board.getCreateAt())
+                    .viewCount(board.getViewCount())
+                    .build());
+        });
+
+        return boardListRespons;
     }
 
     //전체 카테고리 조회
@@ -184,47 +257,6 @@ public class BoardServiceImpl implements BoardService {
                 .build());
 
         return true;
-    }
-
-    //게시글 좋아요 생성
-    @Override
-    public Long likePosts(Long postId) {
-        Board board = boardRepository.findById(postId).get();
-
-        Recommend recommend;
-        Long id;
-
-        if (likeRepository.findByBoardIdAndUserId(board.getId(), board.getUserId()) == null) {
-            recommend = likeRepository.save(Recommend.builder()
-                    .board(board)
-                    .userId(board.getUserId())
-                    .build());
-            return recommend.getId();
-        } else {
-            id = likeRepository.findByBoardIdAndUserId(board.getId(), board.getUserId());
-        }
-
-        return id;
-    }
-
-    //특정 댓글에 대한 대댓글 생성
-    @Override
-    public boolean createNestReply(NestReplyRequest nestReplyRequest) {
-        Reply reply = replyRepository.findById(nestReplyRequest.getReplyId()).get();
-
-        nestReplyRepository.save(NestedReply.builder()
-                .content(nestReplyRequest.getContent())
-                .reply(reply)
-                .userId(nestReplyRequest.getUserId())
-                .build());
-
-        return true;
-    }
-
-    //게시글 좋아요 취소
-    @Override
-    public void deleteLike(Long recommendId) {
-        likeRepository.deleteById(recommendId);
     }
 
     //게시글 댓글 생성
@@ -282,6 +314,20 @@ public class BoardServiceImpl implements BoardService {
                 .build());
     }
 
+    //특정 댓글에 대한 대댓글 생성
+    @Override
+    public boolean createNestReply(NestReplyRequest nestReplyRequest) {
+        Reply reply = replyRepository.findById(nestReplyRequest.getReplyId()).get();
+
+        nestReplyRepository.save(NestedReply.builder()
+                .content(nestReplyRequest.getContent())
+                .reply(reply)
+                .userId(nestReplyRequest.getUserId())
+                .build());
+
+        return true;
+    }
+
     //댓글에 대한 대댓글 조회
     @Override
     public List<ReplyResponse> retrieveNestReply(Long replyId) {
@@ -299,49 +345,5 @@ public class BoardServiceImpl implements BoardService {
                     .build());
         });
         return replyResponses;
-    }
-
-    //게시글 수정
-    @Override
-    public boolean updatePosts(BoardUpdateRequest boardUpdateRequest, List<MultipartFile> multipartFiles) {
-        Board board = boardRepository.findById(boardUpdateRequest.getBoardId()).get();
-
-        List<Long> imgId = boardUpdateRequest.getImgId();
-
-        imgId.forEach(boardImgRepository::deleteById);
-
-        boardRepository.save(Board.builder()
-                .id(board.getId())
-                .viewCount(board.getViewCount())
-                .userId(board.getUserId())
-                .boardCategory(boardCategoryRepository.findById(boardUpdateRequest.getCategoryId()).get())
-                .content(boardUpdateRequest.getContent())
-                .title(boardUpdateRequest.getTitle())
-                .build());
-
-        BoardImage boardImages;
-
-        S3UploadDto s3UploadDto;
-        if (multipartFiles != null && !multipartFiles.isEmpty()) {
-            for (MultipartFile multipartFile : multipartFiles) {
-                try {
-                    s3UploadDto = s3UploaderService.uploadBoards(multipartFile, "myspharosbucket", "boardImg");
-
-                    boardImages = BoardImage.builder()
-                            .board(board)
-                            .boardImgPath(s3UploadDto.getImgUrl())
-                            .originName(s3UploadDto.getOriginName())
-                            .saveName(s3UploadDto.getSaveName())
-                            .build();
-
-                    boardImgRepository.save(boardImages);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-        return true;
     }
 }
