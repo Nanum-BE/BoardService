@@ -5,16 +5,4 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://20.214.170.222:8761/eureka
-management:
-  endpoints:
-    web:
-      exposure:
-        include: busrefresh, health
-
-spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://user-service.mysql.database.azure.com/boardDB?useSSL=false&allowMultiQueries=true&serverTimezone=UTC
-    username: nanum
-    password: spharos1234!
+      defaultZone: http://3.37.166.100:8761/eureka

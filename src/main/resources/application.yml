@@ -1,5 +1,5 @@
 server:
-  port: 9019
+  port: 0
 
 spring:
   servlet:
@@ -26,7 +26,7 @@ spring:
 
 springdoc:
   api-docs:
-    path: /api-docs/json
+    path: /openapi/board-service
     groups:
       enabled: true
   default-produces-media-type: application/json;charset=UTF-8
