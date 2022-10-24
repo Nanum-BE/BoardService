@@ -26,11 +26,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'mysql:mysql-connector-java'
-    implementation 'org.springframework.cloud:spring-cloud-starter-config'
-    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+    implementation 'org.springframework.cloud:spring-cloud-starter-config:3.0.0'
+    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap:3.1.0'
     implementation 'org.modelmapper:modelmapper:3.1.0'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
-    implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp'
+    implementation 'org.springframework.cloud:spring-cloud-starter-bus-amqp:3.0.0'
     implementation 'org.springframework.kafka:spring-kafka:2.9.0'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springdoc:springdoc-openapi-ui:1.6.11'
@@ -42,6 +42,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:2.7.1'
 }
 
 dependencyManagement {
