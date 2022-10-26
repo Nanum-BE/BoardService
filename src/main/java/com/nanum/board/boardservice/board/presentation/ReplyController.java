@@ -12,6 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,14 +58,25 @@ public class ReplyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(baseResponse);
     }
 
+//    @Operation(summary = "상세 게시글 댓글 조회", description = "조회할 게시글에 대한 댓글 전체 조회 api")
+//    @GetMapping("/board/reply/{boardId}")
+//    public ResponseEntity<BaseResponse<List<ReplyResponse>>> retrieveReply(@PathVariable Long boardId) {
+//
+//        List<ReplyResponse> replyResponses = boardService.retrieveReply(boardId);
+//
+//        BaseResponse<List<ReplyResponse>> baseResponse = new BaseResponse<>(replyResponses);
+//        return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
+//    }
     @Operation(summary = "상세 게시글 댓글 조회", description = "조회할 게시글에 대한 댓글 전체 조회 api")
     @GetMapping("/board/reply/{boardId}")
-    public ResponseEntity<BaseResponse<List<ReplyResponse>>> retrieveReply(@PathVariable Long boardId) {
+    public ResponseEntity<BaseResponse<Page<ReplyResponse>>> retrieveReply(@PathVariable Long boardId,
+                                                                           @PageableDefault(sort = "createAt",
+                                                                                   direction = Sort.Direction.DESC)
+                                                                           Pageable pageable) {
 
-        List<ReplyResponse> replyResponses = boardService.retrieveReply(boardId);
+        Page<ReplyResponse> replyResponses = boardService.retrieveReplyV2(boardId, pageable);
 
-        BaseResponse<List<ReplyResponse>> baseResponse = new BaseResponse<>(replyResponses);
-        return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(replyResponses));
     }
 
     @Operation(summary = "상세 게시글 댓글 수정", description = "특정 게시물의 특정 댓글 내용 수정 api")
