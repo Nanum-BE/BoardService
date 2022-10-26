@@ -28,8 +28,11 @@ public class JwtTokenProvider {
     @Value("${token.secret}")
     private String secretKey;
 
-    public String getUserPk(String token) {
-        log.info(String.valueOf(Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().get("Id")));
+    public String getUserPk(String header) {
+        log.info("jihihihi",header);
+
+            String token = header.substring("Bearer ".length());
+        log.info(String.valueOf(Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody()));
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
 

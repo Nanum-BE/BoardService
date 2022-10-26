@@ -7,18 +7,21 @@ import com.nanum.board.boardservice.board.infrastructure.*;
 import com.nanum.board.boardservice.board.vo.*;
 import com.nanum.board.boardservice.client.UserServiceClient;
 import com.nanum.board.boardservice.client.vo.FeignResponse;
-import com.nanum.board.config.BaseResponse;
 import com.nanum.board.utils.s3.S3UploaderService;
 import com.nanum.board.utils.s3.dto.S3UploadDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -48,6 +51,9 @@ public class BoardServiceImpl implements BoardService {
 
         BoardImage boardImage;
         S3UploadDto s3UploadDto;
+        if(multipartFiles==null){
+            return true;
+        }
         for (MultipartFile multipartFile : multipartFiles) {
             if (!multipartFile.isEmpty())
                 try {
@@ -73,7 +79,9 @@ public class BoardServiceImpl implements BoardService {
     public BoardResponse retrievePost(Long postId, Long id) {
         Long likeId;
 
-        Board board = boardRepository.findById(postId).orElseThrow();
+        Optional<Board> byId = boardRepository.findById(postId);
+        Board board = byId.get();
+        log.info("sdassdad",board.getCreateAt());
         FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
@@ -97,42 +105,73 @@ public class BoardServiceImpl implements BoardService {
                 .build());
 
         log.info(String.valueOf(id));
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        BoardResponse boardResponse = modelMapper.map(board, BoardResponse.class);
 
         if (id != -1L) {
             likeId = likeRepository.findByBoardIdAndUserId(postId, id);
-            if (likeId != null) {
-                return BoardResponse.builder()
-                        .id(board.getId())
-                        .title(board.getTitle())
-                        .userId(board.getUserId())
-                        .nickName(user.getResult().getNickName())
-                        .content(board.getContent())
-                        .recommendId(likeId)
-                        .imgUrls(boardImgResponses)
-                        .build();
-            } else
-                likeId = null;
-            return BoardResponse.builder()
-                    .id(board.getId())
-                    .title(board.getTitle())
-                    .userId(board.getUserId())
-                    .nickName(user.getResult().getNickName())
-                    .content(board.getContent())
-                    .recommendId(likeId)
-                    .imgUrls(boardImgResponses)
-                    .build();
-        } else
-            log.info("******");
-
+            boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
+                boardResponse.setNickName(user.getResult().getNickName());
+                boardResponse.setImgUrls(boardImgResponses);
+                boardResponse.setRecommendId(likeId);
+                return boardResponse;
+        }
+        log.info("******");
         likeId = null;
-        return BoardResponse.builder()
+        boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
+        boardResponse.setNickName(user.getResult().getNickName());
+        boardResponse.setImgUrls(boardImgResponses);
+        boardResponse.setRecommendId(likeId);
+        return boardResponse;
+
+    }
+
+    @Override
+    public BoardResponseV2 retrievePostV2(Long postId, Long id) {
+        Long likeId;
+
+        Optional<Board> byId = boardRepository.findById(postId);
+        Board board = byId.get();
+        log.info("sdassdad",board.getCreateAt());
+        FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
+        List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
+        List<BoardImgResponse> boardImgResponses = new ArrayList<>();
+
+        imageList.forEach(boardImage -> {
+            boardImgResponses.add(BoardImgResponse.builder()
+                    .imgId(boardImage.getId())
+                    .imgUrl(boardImage.getBoardImgPath())
+                    .createAt(boardImage.getCreateAt())
+                    .boardId(boardImage.getBoard().getId())
+                    .build());
+        });
+
+        boardRepository.save(Board.builder()
                 .id(board.getId())
                 .title(board.getTitle())
-                .nickName(user.getResult().getNickName())
-                .userId(board.getUserId())
                 .content(board.getContent())
+                .userId(board.getUserId())
+                .boardCategory(board.getBoardCategory())
+                .viewCount(board.getViewCount() + 1)
+                .build());
+
+
+        if (id != -1L) {
+            likeId = likeRepository.findByBoardIdAndUserId(postId, id);
+            return BoardResponseV2.builder().board(board)
+                            .recommendId(likeId)
+                            .imgUrls(boardImgResponses)
+                            .nickName(user.getResult().getNickName())
+                    .build();
+
+        }
+        log.info("******");
+        likeId = null;
+        return BoardResponseV2.builder().board(board)
                 .recommendId(likeId)
                 .imgUrls(boardImgResponses)
+                .nickName(user.getResult().getNickName())
                 .build();
     }
 
@@ -177,6 +216,8 @@ public class BoardServiceImpl implements BoardService {
         }
         return true;
     }
+
+
 
     //게시글 삭제
     @Override
@@ -240,6 +281,17 @@ public class BoardServiceImpl implements BoardService {
 
         return boardListRespons;
     }
+    @Override
+    public Page<BoardListResponse> retrievePostsV2(Long categoryId, Pageable pageable) {
+
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        return boardRepository.findAllByBoardCategoryId(categoryId, pageable).map(board -> modelMapper.map(board, BoardListResponse.class));
+
+    }
+
+
+
 
     //전체 카테고리 조회
     @Override
@@ -288,7 +340,39 @@ public class BoardServiceImpl implements BoardService {
                 .userId(userId)
                 .build());
     }
+    @Override
+    public Page<ReplyResponse> retrieveReplyV2(Long boardId, Pageable pageable) {
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
+        Page<ReplyResponse> replyResponses = replyRepository.findAllByBoardId(boardId, pageable).map(reply -> {
+            FeignResponse<UserDto> users = userServiceClient.getUser(reply.getUserId());
+            Long countNestReply = nestReplyRepository.countAllByReplyId(reply.getId());
+
+            if (reply.getDeleteAt() != null) {
+                return ReplyResponse.builder()
+                        .content("삭제된 댓글입니다")
+                        .nestedCount(countNestReply)
+                        .replyId(reply.getId())
+                        .userId(reply.getUserId())
+                        .imgUrl(null)
+                        .createAt(reply.getCreateAt())
+                        .nickName(null)
+                        .build();
+            } else
+                return ReplyResponse.builder()
+                        .content(reply.getContent())
+                        .nestedCount(countNestReply)
+                        .replyId(reply.getId())
+                        .userId(reply.getUserId())
+                        .imgUrl(users.getResult().getProfileImgUrl())
+                        .createAt(reply.getCreateAt())
+                        .nickName(users.getResult().getNickName())
+                        .build();
+        });
+
+        return replyResponses;
+    }
     //게시글 댓글들 조회
     @Override
     public List<ReplyResponse> retrieveReply(Long boardId) {

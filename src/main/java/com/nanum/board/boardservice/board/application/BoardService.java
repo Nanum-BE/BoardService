@@ -2,6 +2,8 @@ package com.nanum.board.boardservice.board.application;
 
 import com.nanum.board.boardservice.board.dto.BoardDto;
 import com.nanum.board.boardservice.board.vo.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -14,7 +16,7 @@ public interface BoardService {
     List<BoardListResponse> retrievePosts(Long categoryId);
 
     BoardResponse retrievePost(Long postId, Long id);
-
+     BoardResponseV2 retrievePostV2(Long postId, Long id);
     List<BoardCategoryResponse> retrieveCategories();
 
     boolean updateCategories(CategoryUpdateRequest categoryUpdateRequest);
@@ -42,4 +44,8 @@ public interface BoardService {
     void deleteNestReply(Long nestId);
 
     boolean updatePosts(BoardUpdateRequest boardUpdateRequest, List<MultipartFile> multipartFiles);
+
+    Page<BoardListResponse> retrievePostsV2(Long categoryId, Pageable pageable);
+
+    Page<ReplyResponse> retrieveReplyV2(Long boardId, Pageable pageable);
 }
