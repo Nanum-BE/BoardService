@@ -324,21 +324,25 @@ public class BoardServiceImpl implements BoardService {
 
     //게시글 댓글 생성
     @Override
-    public void createComment(Long userId, ReplyRequest replyRequest) {
+    public ReplyResponse createComment(Long userId, ReplyRequest replyRequest) {
         Board board = boardRepository.findById(replyRequest.getBoardId()).get();
-
+        FeignResponse<UserDto> users = userServiceClient.getUser(userId);
         Reply reply = replyRepository.save(Reply.builder()
                 .board(board)
                 .userId(userId)
                 .content(replyRequest.getContent())
                 .build());
 
-        replyRepository.save(Reply.builder()
-                .id(reply.getId())
-                .board(board)
-                .content(reply.getContent())
-                .userId(userId)
-                .build());
+
+       return ReplyResponse.builder()
+               .content(reply.getContent())
+               .nestedCount(0L)
+               .replyId(reply.getId())
+               .userId(reply.getUserId())
+               .imgUrl(users.getResult().getProfileImgUrl())
+               .createAt(reply.getCreateAt())
+               .nickName(users.getResult().getNickName())
+               .build();
     }
     @Override
     public Page<ReplyResponse> retrieveReplyV2(Long boardId, Pageable pageable) {
@@ -429,16 +433,24 @@ public class BoardServiceImpl implements BoardService {
 
     //특정 댓글에 대한 대댓글 생성
     @Override
-    public boolean createNestReply(NestReplyRequest nestReplyRequest) {
+    public ReplyResponse createNestReply(NestReplyRequest nestReplyRequest) {
         Reply reply = replyRepository.findById(nestReplyRequest.getReplyId()).get();
+        FeignResponse<UserDto> users = userServiceClient.getUser(nestReplyRequest.getUserId());
 
-        nestReplyRepository.save(NestedReply.builder()
+        NestedReply nestedReply = nestReplyRepository.save(NestedReply.builder()
                 .content(nestReplyRequest.getContent())
                 .reply(reply)
                 .userId(nestReplyRequest.getUserId())
                 .build());
 
-        return true;
+        return ReplyResponse.builder()
+                .content(nestedReply.getContent())
+                .nickName(users.getResult().getNickName())
+                .userId(nestedReply.getUserId())
+                .imgUrl(users.getResult().getProfileImgUrl())
+                .createAt(nestedReply.getCreateAt())
+                .replyId(nestedReply.getReply().getId())
+                .build();
     }
 
     //댓글에 대한 대댓글 조회
