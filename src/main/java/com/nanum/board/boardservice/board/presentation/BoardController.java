@@ -1,7 +1,9 @@
 package com.nanum.board.boardservice.board.presentation;
 
 import com.nanum.board.boardservice.board.application.BoardService;
+import com.nanum.board.boardservice.board.dto.BoardCategoryDto;
 import com.nanum.board.boardservice.board.dto.BoardDto;
+import com.nanum.board.boardservice.board.dto.BoardSearchCondition;
 import com.nanum.board.boardservice.board.security.jwt.JwtTokenProvider;
 import com.nanum.board.boardservice.board.vo.*;
 import com.nanum.board.boardservice.client.UserServiceClient;
@@ -99,6 +101,14 @@ public class BoardController {
         Page<BoardListResponse> boardListResponses = boardService.retrievePostsV2(categoryId, pageable);
         BaseResponse<Page<BoardListResponse>> baseResponse = new BaseResponse<>(boardListResponses);
         return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
+    }
+    @Operation(summary = "게시글 카테고리별 전체 목록 조회 api", description = "사용자 혹은 호스트가 게시글 목록을 조회")
+    @GetMapping("/posts/search")
+    public ResponseEntity<BaseResponse<Page<BoardCategoryDto>>> search(BoardSearchCondition boardSearchCondition,
+                                                                                   Pageable pageable) {
+        Page<BoardCategoryDto> search = boardService.search(boardSearchCondition, pageable);
+
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(search));
     }
 
 //    @Operation(summary = "게시글 카테고리별 전체 목록 조회 api", description = "사용자 혹은 호스트가 게시글 목록을 조회")
