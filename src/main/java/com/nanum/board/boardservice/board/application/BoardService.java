@@ -1,6 +1,8 @@
 package com.nanum.board.boardservice.board.application;
 
+import com.nanum.board.boardservice.board.dto.BoardCategoryDto;
 import com.nanum.board.boardservice.board.dto.BoardDto;
+import com.nanum.board.boardservice.board.dto.BoardSearchCondition;
 import com.nanum.board.boardservice.board.vo.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,4 +50,6 @@ public interface BoardService {
     Page<BoardListResponse> retrievePostsV2(Long categoryId, Pageable pageable);
 
     Page<ReplyResponse> retrieveReplyV2(Long boardId, Pageable pageable);
+
+    Page<BoardCategoryDto> search(BoardSearchCondition boardSearchCondition, Pageable pageable);
 }
