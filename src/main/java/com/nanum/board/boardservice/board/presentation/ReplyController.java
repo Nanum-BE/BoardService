@@ -50,12 +50,12 @@ public class ReplyController {
     @PostMapping("/board/reply/{userId}")
     public ResponseEntity<Object> createComment(@PathVariable Long userId,
                                                 @RequestBody ReplyRequest replyRequest) {
-        boardService.createComment(userId, replyRequest);
+        ReplyResponse comment = boardService.createComment(userId, replyRequest);
 
         String result = "댓글 생성이 완료되었습니다";
-        BaseResponse<String> baseResponse = new BaseResponse<>(result);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(baseResponse);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body( new BaseResponse<>(comment));
     }
 
 //    @Operation(summary = "상세 게시글 댓글 조회", description = "조회할 게시글에 대한 댓글 전체 조회 api")
@@ -102,11 +102,11 @@ public class ReplyController {
     @Operation(summary = "게시글 대댓글 생성", description = "특정 댓글에 대한 대댓글 생성")
     @PostMapping("/board/reply/nest")
     public ResponseEntity<Object> createNestReply(@RequestBody NestReplyRequest nestReplyRequest) {
-        boardService.createNestReply(nestReplyRequest);
+        ReplyResponse nestReply = boardService.createNestReply(nestReplyRequest);
 
-        String result = "대댓글 작성이 완료되었습니다";
-        BaseResponse<String> baseResponse = new BaseResponse<>(result);
-        return ResponseEntity.status(HttpStatus.CREATED).body(baseResponse);
+//        String result = "대댓글 작성이 완료되었습니다";
+//        BaseResponse<String> baseResponse = new BaseResponse<>(nestReply);
+        return ResponseEntity.status(HttpStatus.CREATED).body( new BaseResponse<>(nestReply));
     }
 
     @Operation(summary = "게시글 대댓글 조회", description = "특정 댓글에 대한 대댓글 조회")

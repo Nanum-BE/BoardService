@@ -27,13 +27,13 @@ public interface BoardService {
 
     void deleteReply(Long replyId);
 
-    boolean createNestReply(NestReplyRequest nestReplyRequest);
+    ReplyResponse createNestReply(NestReplyRequest nestReplyRequest);
 
     void deleteLike(Long recommendId);
 
     void updateReply(ReplyUpdateRequest replyUpdateRequest);
 
-    void createComment(Long userId, ReplyRequest replyRequest);
+    ReplyResponse createComment(Long userId, ReplyRequest replyRequest);
 
     List<ReplyResponse> retrieveReply(Long boardId);
 
