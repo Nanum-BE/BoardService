@@ -22,7 +22,7 @@ public class BoardResponse {
     private String title;
 
     private String content;
-
+    private Long categoryId;
     private String nickName;
     private String profileImgUrl;
     private Long recommendId;

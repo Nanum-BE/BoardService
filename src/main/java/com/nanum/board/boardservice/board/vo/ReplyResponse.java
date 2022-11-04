@@ -31,4 +31,6 @@ public class ReplyResponse {
     private String content;
 
     private LocalDateTime createAt;
+
+    private Long id;
 }
