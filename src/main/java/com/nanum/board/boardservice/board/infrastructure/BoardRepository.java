@@ -11,4 +11,5 @@ public interface BoardRepository extends JpaRepository<Board, Long> ,BoardReposi
 
     List<Board> findAllByBoardCategoryId(Long categoryId);
     Page<Board> findAllByBoardCategoryId(Long categoryId,Pageable pageable);
+    Long countAllByUserId(Long userId);
 }

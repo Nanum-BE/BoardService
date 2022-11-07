@@ -52,4 +52,5 @@ public interface BoardService {
     Page<ReplyResponse> retrieveReplyV2(Long boardId, Pageable pageable);
 
     Page<BoardCategoryDto> search(BoardSearchCondition boardSearchCondition, Pageable pageable);
+    BoardTotalResponse retrieveBoardTotal(Long userId);
 }

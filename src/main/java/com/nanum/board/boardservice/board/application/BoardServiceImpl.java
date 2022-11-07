@@ -1,10 +1,7 @@
 package com.nanum.board.boardservice.board.application;
 
 import com.nanum.board.boardservice.board.domain.*;
-import com.nanum.board.boardservice.board.dto.BoardCategoryDto;
-import com.nanum.board.boardservice.board.dto.BoardDto;
-import com.nanum.board.boardservice.board.dto.BoardSearchCondition;
-import com.nanum.board.boardservice.board.dto.UserDto;
+import com.nanum.board.boardservice.board.dto.*;
 import com.nanum.board.boardservice.board.infrastructure.*;
 import com.nanum.board.boardservice.board.vo.*;
 import com.nanum.board.boardservice.client.UserServiceClient;
@@ -383,6 +380,14 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public Page<BoardCategoryDto> search(BoardSearchCondition boardSearchCondition, Pageable pageable) {
         return boardRepository.search(boardSearchCondition,pageable);
+    }
+
+    @Override
+    public BoardTotalResponse retrieveBoardTotal(Long userId) {
+        Long boardCount = boardRepository.countAllByUserId(userId);
+        Long replyCount = replyRepository.findReplyTotal(userId);
+
+        return new BoardTotalResponse(boardCount, replyCount);
     }
 
     //게시글 댓글들 조회

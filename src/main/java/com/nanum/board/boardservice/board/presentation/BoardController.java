@@ -76,18 +76,8 @@ public class BoardController {
         }
         else{
             log.info(boardImages.toString());
-            log.info("******");
             boardService.writePost(userId, boardDto, boardImages);
         }
-//        if (multipartFiles != null && !multipartFiles.isEmpty()) {
-//            log.info(multipartFiles.toString());
-//            log.info("******");
-//            boardService.writePost(userId, boardDto, multipartFiles);
-//        } else {
-//            log.info("-------");
-//            boardService.writePost(userId, boardDto, null);
-//        }
-
 
         return ResponseEntity.status(HttpStatus.CREATED).body(baseResponse);
     }
@@ -110,14 +100,6 @@ public class BoardController {
 
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(search));
     }
-
-//    @Operation(summary = "게시글 카테고리별 전체 목록 조회 api", description = "사용자 혹은 호스트가 게시글 목록을 조회")
-//    @GetMapping("/posts/category/{categoryId}")
-//    public ResponseEntity<BaseResponse<List<BoardListResponse>>> retrievePosts(@PathVariable Long categoryId) {
-//        List<BoardListResponse> boardListRespons = boardService.retrievePosts(categoryId);
-//        BaseResponse<List<BoardListResponse>> baseResponse = new BaseResponse<>(boardListRespons);
-//        return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
-//    }
 
     @Operation(summary = "게시글 상세조회 api", description = "게시글 Id에 따라 상세조회하는 api")
     @GetMapping("/posts/{postId}")
@@ -167,5 +149,23 @@ public class BoardController {
         BaseResponse<String> response = new BaseResponse<>(result);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @Operation(summary = "게시글 및 댓글 개수 조회", description = "사용자가 작성한 게시글과 댓글 개수를 조회")
+    @GetMapping("/posts/total")
+    public ResponseEntity<Object> retrieveBoardTotal() {
+        String token = jwtTokenProvider.resolveToken();
+        Long userId = token != null ? Long.valueOf(jwtTokenProvider.getId(token)) : null;
+
+        BoardTotalResponse boardTotalResponse;
+
+        if(token == null) {
+            boardTotalResponse = new BoardTotalResponse(0L, 0L);
+        }
+         else {
+             boardTotalResponse = boardService.retrieveBoardTotal(userId);
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(boardTotalResponse));
     }
 }
