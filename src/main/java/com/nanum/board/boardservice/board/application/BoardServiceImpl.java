@@ -50,7 +50,7 @@ public class BoardServiceImpl implements BoardService {
 
         BoardImage boardImage;
         S3UploadDto s3UploadDto;
-        if(multipartFiles==null){
+        if (multipartFiles == null) {
             return true;
         }
         for (MultipartFile multipartFile : multipartFiles) {
@@ -80,7 +80,7 @@ public class BoardServiceImpl implements BoardService {
 
         Optional<Board> byId = boardRepository.findById(postId);
         Board board = byId.get();
-        log.info("sdassdad",board.getCreateAt());
+        log.info("sdassdad", board.getCreateAt());
         FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
@@ -111,10 +111,10 @@ public class BoardServiceImpl implements BoardService {
         if (id != -1L) {
             likeId = likeRepository.findByBoardIdAndUserId(postId, id);
             boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
-                boardResponse.setNickName(user.getResult().getNickName());
-                boardResponse.setImgUrls(boardImgResponses);
-                boardResponse.setRecommendId(likeId);
-                return boardResponse;
+            boardResponse.setNickName(user.getResult().getNickName());
+            boardResponse.setImgUrls(boardImgResponses);
+            boardResponse.setRecommendId(likeId);
+            return boardResponse;
         }
         log.info("******");
         likeId = null;
@@ -132,7 +132,7 @@ public class BoardServiceImpl implements BoardService {
 
         Optional<Board> byId = boardRepository.findById(postId);
         Board board = byId.get();
-        log.info("sdassdad",board.getCreateAt());
+        log.info("sdassdad", board.getCreateAt());
         FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
@@ -159,9 +159,9 @@ public class BoardServiceImpl implements BoardService {
         if (id != -1L) {
             likeId = likeRepository.findByBoardIdAndUserId(postId, id);
             return BoardResponseV2.builder().board(board)
-                            .recommendId(likeId)
-                            .imgUrls(boardImgResponses)
-                            .nickName(user.getResult().getNickName())
+                    .recommendId(likeId)
+                    .imgUrls(boardImgResponses)
+                    .nickName(user.getResult().getNickName())
                     .build();
 
         }
@@ -180,8 +180,8 @@ public class BoardServiceImpl implements BoardService {
         Board board = boardRepository.findById(boardUpdateRequest.getBoardId()).get();
 
         List<Long> imgId = boardUpdateRequest.getImgId();
-        if(imgId !=null)
-        imgId.forEach(boardImgRepository::deleteById);
+        if (imgId != null)
+            imgId.forEach(boardImgRepository::deleteById);
 
         boardRepository.save(Board.builder()
                 .id(board.getId())
@@ -195,7 +195,7 @@ public class BoardServiceImpl implements BoardService {
         BoardImage boardImages;
 
         S3UploadDto s3UploadDto;
-        if(multipartFiles==null){
+        if (multipartFiles == null) {
             return true;
         }
         if (!multipartFiles.isEmpty()) {
@@ -218,7 +218,6 @@ public class BoardServiceImpl implements BoardService {
         }
         return true;
     }
-
 
 
     //게시글 삭제
@@ -283,6 +282,7 @@ public class BoardServiceImpl implements BoardService {
 
         return boardListRespons;
     }
+
     @Override
     public Page<BoardListResponse> retrievePostsV2(Long categoryId, Pageable pageable) {
 
@@ -291,8 +291,6 @@ public class BoardServiceImpl implements BoardService {
         return boardRepository.findAllByBoardCategoryId(categoryId, pageable).map(board -> modelMapper.map(board, BoardListResponse.class));
 
     }
-
-
 
 
     //전체 카테고리 조회
@@ -336,16 +334,17 @@ public class BoardServiceImpl implements BoardService {
                 .build());
 
 
-       return ReplyResponse.builder()
-               .content(reply.getContent())
-               .nestedCount(0L)
-               .replyId(reply.getId())
-               .userId(reply.getUserId())
-               .imgUrl(users.getResult().getProfileImgUrl())
-               .createAt(reply.getCreateAt())
-               .nickName(users.getResult().getNickName())
-               .build();
+        return ReplyResponse.builder()
+                .content(reply.getContent())
+                .nestedCount(0L)
+                .replyId(reply.getId())
+                .userId(reply.getUserId())
+                .imgUrl(users.getResult().getProfileImgUrl())
+                .createAt(reply.getCreateAt())
+                .nickName(users.getResult().getNickName())
+                .build();
     }
+
     @Override
     public Page<ReplyResponse> retrieveReplyV2(Long boardId, Pageable pageable) {
         ModelMapper modelMapper = new ModelMapper();
@@ -382,21 +381,22 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public Page<BoardCategoryDto> search(BoardSearchCondition boardSearchCondition, Pageable pageable) {
-        return boardRepository.search(boardSearchCondition,pageable);
+        return boardRepository.search(boardSearchCondition, pageable);
     }
 
     @Override
     public Page<BoardUserDto> findPostsByUser(Long userId, Pageable pageable) {
-      return  boardRepository.findAllByUserId(userId,pageable).map(board -> BoardUserDto.builder()
+        return boardRepository.findAllByUserId(userId, pageable).map(board -> BoardUserDto.builder()
                 .id(board.getId())
                 .userId(board.getUserId())
                 .content(board.getContent())
                 .viewCount(board.getViewCount())
                 .title(board.getTitle())
                 .categoryId(board.getBoardCategory().getId())
-              .createAt(board.getCreateAt())
+                .createAt(board.getCreateAt())
                 .build()
         );
+    }
 
     @Override
     public BoardTotalResponse retrieveBoardTotal(Long userId) {
