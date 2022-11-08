@@ -103,10 +103,14 @@ public class BoardServiceImpl implements BoardService {
                 .viewCount(board.getViewCount() + 1)
                 .build());
 
+        log.info(String.valueOf(save.getCreateAt()));
+
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         BoardResponse boardResponse = modelMapper.map(save, BoardResponse.class);
         boardResponse.setCategoryId(board.getBoardCategory().getId());
+        boardResponse.setCreateAt(save.getCreateAt());
+
         if (id != -1L) {
             likeId = likeRepository.findByBoardIdAndUserId(postId, id);
             boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
