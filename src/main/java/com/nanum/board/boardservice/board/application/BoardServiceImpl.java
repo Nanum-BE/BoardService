@@ -94,7 +94,7 @@ public class BoardServiceImpl implements BoardService {
                     .build());
         });
 
-        boardRepository.save(Board.builder()
+        Board save = boardRepository.save(Board.builder()
                 .id(board.getId())
                 .title(board.getTitle())
                 .content(board.getContent())
@@ -105,7 +105,7 @@ public class BoardServiceImpl implements BoardService {
 
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        BoardResponse boardResponse = modelMapper.map(board, BoardResponse.class);
+        BoardResponse boardResponse = modelMapper.map(save, BoardResponse.class);
         boardResponse.setCategoryId(board.getBoardCategory().getId());
         if (id != -1L) {
             likeId = likeRepository.findByBoardIdAndUserId(postId, id);
