@@ -107,7 +107,7 @@ public class BoardServiceImpl implements BoardService {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         BoardResponse boardResponse = modelMapper.map(board, BoardResponse.class);
-
+        boardResponse.setCategoryId(board.getBoardCategory().getId());
         if (id != -1L) {
             likeId = likeRepository.findByBoardIdAndUserId(postId, id);
             boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
@@ -180,7 +180,7 @@ public class BoardServiceImpl implements BoardService {
         Board board = boardRepository.findById(boardUpdateRequest.getBoardId()).get();
 
         List<Long> imgId = boardUpdateRequest.getImgId();
-
+        if(imgId !=null)
         imgId.forEach(boardImgRepository::deleteById);
 
         boardRepository.save(Board.builder()
@@ -195,7 +195,10 @@ public class BoardServiceImpl implements BoardService {
         BoardImage boardImages;
 
         S3UploadDto s3UploadDto;
-        if (multipartFiles != null && !multipartFiles.isEmpty()) {
+        if(multipartFiles==null){
+            return true;
+        }
+        if (!multipartFiles.isEmpty()) {
             for (MultipartFile multipartFile : multipartFiles) {
                 try {
                     s3UploadDto = s3UploaderService.uploadBoards(multipartFile, "myspharosbucket", "boardImg");
@@ -358,7 +361,7 @@ public class BoardServiceImpl implements BoardService {
                         .nestedCount(countNestReply)
                         .replyId(reply.getId())
                         .userId(reply.getUserId())
-                        .imgUrl(null)
+                        .imgUrl("/images/default.png")
                         .createAt(reply.getCreateAt())
                         .nickName(null)
                         .build();
@@ -381,6 +384,19 @@ public class BoardServiceImpl implements BoardService {
     public Page<BoardCategoryDto> search(BoardSearchCondition boardSearchCondition, Pageable pageable) {
         return boardRepository.search(boardSearchCondition,pageable);
     }
+
+    @Override
+    public Page<BoardUserDto> findPostsByUser(Long userId, Pageable pageable) {
+      return  boardRepository.findAllByUserId(userId,pageable).map(board -> BoardUserDto.builder()
+                .id(board.getId())
+                .userId(board.getUserId())
+                .content(board.getContent())
+                .viewCount(board.getViewCount())
+                .title(board.getTitle())
+                .categoryId(board.getBoardCategory().getId())
+              .createAt(board.getCreateAt())
+                .build()
+        );
 
     @Override
     public BoardTotalResponse retrieveBoardTotal(Long userId) {
@@ -407,7 +423,7 @@ public class BoardServiceImpl implements BoardService {
                         .nestedCount(countNestReply)
                         .replyId(reply.getId())
                         .userId(reply.getUserId())
-                        .imgUrl(null)
+                        .imgUrl("/images/default.png")
                         .createAt(reply.getCreateAt())
                         .nickName(null)
                         .build());
@@ -480,9 +496,10 @@ public class BoardServiceImpl implements BoardService {
                         .content("삭제된 댓글입니다")
                         .nickName(null)
                         .userId(nestedReply.getUserId())
-                        .imgUrl(null)
+                        .imgUrl("/images/default.png")
                         .createAt(nestedReply.getCreateAt())
                         .replyId(nestedReply.getReply().getId())
+                        .id(nestedReply.getId())
                         .build());
             } else
                 replyResponses.add(ReplyResponse.builder()
@@ -492,6 +509,7 @@ public class BoardServiceImpl implements BoardService {
                         .imgUrl(users.getResult().getProfileImgUrl())
                         .createAt(nestedReply.getCreateAt())
                         .replyId(nestedReply.getReply().getId())
+                        .id(nestedReply.getId())
                         .build());
         });
         return replyResponses;
