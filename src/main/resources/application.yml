@@ -14,7 +14,7 @@ spring:
     port: 5672
     username: guest
     password: guest
-    host: 3.37.166.100
+    host: 3.35.80.242
 
   jpa:
     generate-ddl: true

@@ -397,6 +397,13 @@ public class BoardServiceImpl implements BoardService {
               .createAt(board.getCreateAt())
                 .build()
         );
+
+    @Override
+    public BoardTotalResponse retrieveBoardTotal(Long userId) {
+        Long boardCount = boardRepository.countAllByUserId(userId);
+        Long replyCount = replyRepository.findReplyTotal(userId);
+
+        return new BoardTotalResponse(boardCount, replyCount);
     }
 
     //게시글 댓글들 조회

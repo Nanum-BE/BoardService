@@ -54,5 +54,9 @@ public interface BoardService {
 
     Page<BoardCategoryDto> search(BoardSearchCondition boardSearchCondition, Pageable pageable);
 
+
     Page<BoardUserDto> findPostsByUser(Long userId, Pageable pageable);
+
+    BoardTotalResponse retrieveBoardTotal(Long userId);
+
 }

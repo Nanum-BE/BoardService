@@ -29,18 +29,25 @@ public class JwtTokenProvider {
     private String secretKey;
 
     public String getUserPk(String header) {
-        log.info("jihihihi",header);
-
-            String token = header.substring("Bearer ".length());
+        String token = header.substring("Bearer ".length());
         log.info(String.valueOf(Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody()));
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public String getId(String token) {
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().get("Id").toString();
+    }
+
+    public String resolveToken() {
+        HttpServletRequest request = ((ServletRequestAttributes)
+                RequestContextHolder.currentRequestAttributes()).getRequest();
+        return request.getHeader("Authorization") != null ? request.getHeader("Authorization").replaceAll("Bearer ", "") : null;
     }
 
     public String getUserId(String token) {
         UsersResponse users = userServiceClient.getUsersByEmail(token);
         return String.valueOf(users.getUserId());
     }
-
 
     public String customResolveToken() {
         HttpServletRequest request = ((ServletRequestAttributes)
