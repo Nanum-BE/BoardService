@@ -94,7 +94,7 @@ public class BoardServiceImpl implements BoardService {
                     .build());
         });
 
-        Board save = boardRepository.save(Board.builder()
+        boardRepository.save(Board.builder()
                 .id(board.getId())
                 .title(board.getTitle())
                 .content(board.getContent())
@@ -103,29 +103,22 @@ public class BoardServiceImpl implements BoardService {
                 .viewCount(board.getViewCount() + 1)
                 .build());
 
-        log.info(String.valueOf(save.getCreateAt()));
+        likeId = likeRepository.findByBoardIdAndUserId(postId, id);
 
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        BoardResponse boardResponse = modelMapper.map(save, BoardResponse.class);
-        boardResponse.setCategoryId(board.getBoardCategory().getId());
-        boardResponse.setCreateAt(save.getCreateAt());
-
-        if (id != -1L) {
-            likeId = likeRepository.findByBoardIdAndUserId(postId, id);
-            boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
-            boardResponse.setNickName(user.getResult().getNickName());
-            boardResponse.setImgUrls(boardImgResponses);
-            boardResponse.setRecommendId(likeId);
-            return boardResponse;
-        }
-
-        likeId = null;
-        boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
-        boardResponse.setNickName(user.getResult().getNickName());
-        boardResponse.setImgUrls(boardImgResponses);
-        boardResponse.setRecommendId(likeId);
-        return boardResponse;
+        return BoardResponse.builder()
+                .id(board.getId())
+                .userId(user.getResult().getUserId())
+                .title(board.getTitle())
+                .content(board.getContent())
+                .categoryId(board.getBoardCategory().getId())
+                .nickName(user.getResult().getNickName())
+                .profileImgUrl(user.getResult().getProfileImgUrl())
+                .recommendId(likeId)
+                .viewCount(board.getViewCount())
+                .createAt(board.getCreateAt())
+                .updateAt(board.getUpdateAt())
+                .imgUrls(boardImgResponses)
+                .build();
 
     }
 
