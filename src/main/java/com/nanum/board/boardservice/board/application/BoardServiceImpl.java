@@ -107,7 +107,7 @@ public class BoardServiceImpl implements BoardService {
 
         return BoardResponse.builder()
                 .id(board.getId())
-                .userId(user.getResult().getUserId())
+                .userId(board.getUserId())
                 .title(board.getTitle())
                 .content(board.getContent())
                 .categoryId(board.getBoardCategory().getId())
