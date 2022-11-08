@@ -119,7 +119,6 @@ public class BoardServiceImpl implements BoardService {
                 .updateAt(board.getUpdateAt())
                 .imgUrls(boardImgResponses)
                 .build();
-
     }
 
     @Override
