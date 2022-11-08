@@ -36,7 +36,7 @@ public class Board extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Comment("속한 카테고리 Id")
