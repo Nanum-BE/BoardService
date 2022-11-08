@@ -58,15 +58,6 @@ public class ReplyController {
         return ResponseEntity.status(HttpStatus.CREATED).body( new BaseResponse<>(comment));
     }
 
-//    @Operation(summary = "상세 게시글 댓글 조회", description = "조회할 게시글에 대한 댓글 전체 조회 api")
-//    @GetMapping("/board/reply/{boardId}")
-//    public ResponseEntity<BaseResponse<List<ReplyResponse>>> retrieveReply(@PathVariable Long boardId) {
-//
-//        List<ReplyResponse> replyResponses = boardService.retrieveReply(boardId);
-//
-//        BaseResponse<List<ReplyResponse>> baseResponse = new BaseResponse<>(replyResponses);
-//        return ResponseEntity.status(HttpStatus.OK).body(baseResponse);
-//    }
     @Operation(summary = "상세 게시글 댓글 조회", description = "조회할 게시글에 대한 댓글 전체 조회 api")
     @GetMapping("/board/reply/{boardId}")
     public ResponseEntity<BaseResponse<Page<ReplyResponse>>> retrieveReply(@PathVariable Long boardId,

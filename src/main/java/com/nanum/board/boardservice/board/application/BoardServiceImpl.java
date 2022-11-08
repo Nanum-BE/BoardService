@@ -80,7 +80,7 @@ public class BoardServiceImpl implements BoardService {
 
         Optional<Board> byId = boardRepository.findById(postId);
         Board board = byId.get();
-        log.info("sdassdad", board.getCreateAt());
+
         FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
@@ -103,7 +103,6 @@ public class BoardServiceImpl implements BoardService {
                 .viewCount(board.getViewCount() + 1)
                 .build());
 
-        log.info(String.valueOf(id));
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         BoardResponse boardResponse = modelMapper.map(board, BoardResponse.class);
@@ -116,7 +115,7 @@ public class BoardServiceImpl implements BoardService {
             boardResponse.setRecommendId(likeId);
             return boardResponse;
         }
-        log.info("******");
+
         likeId = null;
         boardResponse.setProfileImgUrl(user.getResult().getProfileImgUrl());
         boardResponse.setNickName(user.getResult().getNickName());
@@ -132,7 +131,7 @@ public class BoardServiceImpl implements BoardService {
 
         Optional<Board> byId = boardRepository.findById(postId);
         Board board = byId.get();
-        log.info("sdassdad", board.getCreateAt());
+
         FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
@@ -165,7 +164,7 @@ public class BoardServiceImpl implements BoardService {
                     .build();
 
         }
-        log.info("******");
+
         likeId = null;
         return BoardResponseV2.builder().board(board)
                 .recommendId(likeId)

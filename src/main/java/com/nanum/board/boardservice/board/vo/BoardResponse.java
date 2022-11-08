@@ -28,7 +28,7 @@ public class BoardResponse {
     private Long recommendId;
     private Long viewCount;
     private LocalDateTime updateAt;
-    private LocalDateTime creatAt;
+    private LocalDateTime createAt;
     List<BoardImgResponse> imgUrls;
 
 }
