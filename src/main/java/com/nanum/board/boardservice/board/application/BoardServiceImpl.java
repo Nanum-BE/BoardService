@@ -6,6 +6,7 @@ import com.nanum.board.boardservice.board.infrastructure.*;
 import com.nanum.board.boardservice.board.vo.*;
 import com.nanum.board.boardservice.client.UserServiceClient;
 import com.nanum.board.boardservice.client.vo.FeignResponse;
+import com.nanum.board.exception.BoardImgNotFoundException;
 import com.nanum.board.utils.s3.S3UploaderService;
 import com.nanum.board.utils.s3.dto.S3UploadDto;
 import lombok.RequiredArgsConstructor;
@@ -79,8 +80,11 @@ public class BoardServiceImpl implements BoardService {
         Long likeId;
 
         Optional<Board> byId = boardRepository.findById(postId);
+        if(byId.isEmpty()){
+            throw new BoardImgNotFoundException();
+        }
         Board board = byId.get();
-
+//        Board board = boardRepository.findByBoardId(postId);
         FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
@@ -93,17 +97,17 @@ public class BoardServiceImpl implements BoardService {
                     .boardId(boardImage.getBoard().getId())
                     .build());
         });
+        boardRepository.replaceViewCount(postId);
+//        boardRepository.save(Board.builder()
+//                .id(board.getId())
+//                .title(board.getTitle())
+//                .content(board.getContent())
+//                .userId(board.getUserId())
+//                .boardCategory(board.getBoardCategory())
+//                .viewCount(board.getViewCount() + 1)
+//                .build());
 
-        boardRepository.save(Board.builder()
-                .id(board.getId())
-                .title(board.getTitle())
-                .content(board.getContent())
-                .userId(board.getUserId())
-                .boardCategory(board.getBoardCategory())
-                .viewCount(board.getViewCount() + 1)
-                .build());
-
-        likeId = likeRepository.findByBoardIdAndUserId(postId, id);
+//        likeId = likeRepository.findByBoardIdAndUserId(postId, id);
 
         return BoardResponse.builder()
                 .id(board.getId())
@@ -113,7 +117,7 @@ public class BoardServiceImpl implements BoardService {
                 .categoryId(board.getBoardCategory().getId())
                 .nickName(user.getResult().getNickName())
                 .profileImgUrl(user.getResult().getProfileImgUrl())
-                .recommendId(likeId)
+
                 .viewCount(board.getViewCount())
                 .createAt(board.getCreateAt())
                 .updateAt(board.getUpdateAt())

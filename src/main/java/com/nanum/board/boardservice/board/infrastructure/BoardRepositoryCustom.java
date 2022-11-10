@@ -8,4 +8,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface BoardRepositoryCustom  {
     Page<BoardCategoryDto> search(BoardSearchCondition boardSearchCondition, Pageable pageable);
+
+    Board findByBoardId(Long boardId);
 }

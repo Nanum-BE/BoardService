@@ -73,6 +73,15 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom{
         return PageableExecutionUtils.getPage(boardCategoryDtos,pageable,()->jpaQuery.fetch().size());
     }
 
+    @Override
+    public Board findByBoardId(Long boardId) {
+        Board board1 = queryFactory.selectFrom(board)
+                .where(board.id.eq(boardId))
+                .fetchFirst();
+
+        return board1;
+    }
+
     private BooleanExpression all(String all){
         return hasText(all) ? board.title.contains(all).or(board.content.contains(all)) : null;
     }
