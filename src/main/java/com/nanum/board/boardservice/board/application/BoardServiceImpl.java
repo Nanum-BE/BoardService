@@ -84,7 +84,7 @@ public class BoardServiceImpl implements BoardService {
             throw new BoardImgNotFoundException();
         }
         Board board = byId.get();
-//        Board board = boardRepository.findByBoardId(postId);
+
         FeignResponse<UserDto> user = userServiceClient.getUser(board.getUserId());
         List<BoardImage> imageList = boardImgRepository.findAllByBoardId(postId);
         List<BoardImgResponse> boardImgResponses = new ArrayList<>();
@@ -98,16 +98,6 @@ public class BoardServiceImpl implements BoardService {
                     .build());
         });
         boardRepository.replaceViewCount(postId);
-//        boardRepository.save(Board.builder()
-//                .id(board.getId())
-//                .title(board.getTitle())
-//                .content(board.getContent())
-//                .userId(board.getUserId())
-//                .boardCategory(board.getBoardCategory())
-//                .viewCount(board.getViewCount() + 1)
-//                .build());
-
-//        likeId = likeRepository.findByBoardIdAndUserId(postId, id);
 
         return BoardResponse.builder()
                 .id(board.getId())
